@@ -1,0 +1,8 @@
+# created by virtualenv automatically
+# Environments
+.env
+.venv/
+env/
+venv/
+
+pythonProject1/.idea/
