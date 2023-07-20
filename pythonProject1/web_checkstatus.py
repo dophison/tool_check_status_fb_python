@@ -1,15 +1,14 @@
 import requests
 from flask import Flask
 import urllib.parse
-import re
-import html
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 import time
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from webdriver_manager.firefox import GeckoDriverManager
-
+import os
+from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 def read_file_content():
@@ -41,30 +40,58 @@ def check_link_status(response):
                     '<meta name="description" content="')
                 meta_end = response.find('đang', meta_start)
                 name = response[meta_start:meta_end]
-                print(name)
             else:
                 name = ''
             return href_content, name, style
         elif '<id="facebook" class="no_js">' in response:
-
             # Trả về style màu đỏ
             style = 'red'
             return '','', style
-        return '','','red'
+        return '','',''
     except requests.exceptions.RequestException:
-        return '','','red'
+        return '','','yellow'
 
 
-# Lấy name từ trong status có dạng https://www.facebook.com/people/abcxsttat\
-def get_name_from_status(status):
-    # Loại bỏ phần đầu của chuỗi status
-    base_url = 'https://www.facebook.com/people/'
-    name_start = len(base_url)
-    # Tìm vị trí kết thúc của name trong chuỗi
-    name_end = status.find('/', name_start)
-    # Trích xuất name từ chuỗi
-    name = status[name_start:name_end]
-    return name
+def check_link_status_sign_in(response):
+    try:
+        if 'Bạn hiện không xem được nội dung này' in response:
+            # Trả về style màu đỏ
+            style = 'red'
+            return '', '', style
+        elif 'class="x6s0dn4 x9f619 x78zum5 x2lah0s x1hshjfz x1n2onr6 xng8ra x1pi30zi x1swvt13"' in response:
+            # Bỏ qua chuỗi đầu tiên
+            # start_tag = '<h1 class="x1heor9g x1qlqyl8 x1pd3egz x1a2a7pz">'
+            # start_index = response.find(start_tag)
+            # if start_index != -1:
+            #     # Bắt đầu tìm từ vị trí kết thúc của chuỗi đầu tiên
+            #     end_index = response.find('</h1>', start_index)
+            #     name = response[start_index + len(start_tag):end_index]
+            start_tag = '<h1'
+            end_tag = '</h1>'
+            start_index = response.find(start_tag)
+            if start_index != -1:
+                end_index = response.find(end_tag, start_index + len(start_tag))
+                first_string = response[start_index:end_index + len(end_tag)]
+                # Tìm chuỗi thứ hai từ vị trí kết thúc của chuỗi đầu tiên
+                second_start_index = response.find(start_tag, end_index + len(end_tag))
+                second_end_index = response.find(end_tag, second_start_index + len(start_tag))
+                second_string = response[second_start_index:second_end_index + len(end_tag)]
+
+                print(first_string)
+                print(second_string)
+                if second_string.strip() == 'Thông báo' or second_string =='' :
+                    soup = BeautifulSoup(first_string, 'html.parser')
+                    name = soup.text
+                    style = 'green'
+                    return '', name, style
+                else:
+                    soup_1 = BeautifulSoup(second_string, 'html.parser')
+                    name = soup_1.text
+                    style = 'green'
+                    return '', name, style
+        return '','','yellow'
+    except requests.exceptions.RequestException:
+        return '','','yellow'
 
 
 @app.route('/')
@@ -79,19 +106,12 @@ def status():
     debug_links = read_debug_links()
     driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()))
     result = []
-    # Mở trang đăng nhập của Facebook
-    driver.get("https://www.facebook.com/login")
-
-    # Nhập thông tin đăng nhập (email hoặc số điện thoại và mật khẩu)
-    email_or_phone = "van1973cute@gmail.com"
-    password = "haudinhtruong20122002"
-    email_phone_input = driver.find_element(By.ID,"email")
-    email_phone_input.send_keys(email_or_phone)
-    password_input = driver.find_element(By.ID,"pass")
-    password_input.send_keys(password)
-    # Thực hiện đăng nhập bằng cách nhấn Enter
-    password_input.send_keys(Keys.ENTER)
-
+    result_need_sign_in= []
+    # Lấy thông tin đăng nhập (email hoặc số điện thoại và mật khẩu)
+    email_or_phone = os.environ.get("MY_EMAIL")
+    password = os.environ.get("MY_PASSWORD")
+    email_or_phone = "van" + email_or_phone
+    password = "truong" + password
     try:
         for link in debug_links:
             driver.get(link)
@@ -101,18 +121,46 @@ def status():
                 name = convert_percent_encoded_to_unicode(name)
                 result.append({'status': status, 'name': name, 'style': style})
             if status == '':
-                status = link
-                result.append({'status': status, 'name': "Unknown", 'style': style})
+                result_need_sign_in.append(link)
     finally:
         driver.quit()
+    #Kiem tra cac link bằng đăng nhập
+    try:
+        driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()))
+        # Xử lý sign in
+        print(email_or_phone)
+        print(password)
+        driver.get("https://www.facebook.com/login")
+        email_phone_input = driver.find_element(By.ID, "email")
+        email_phone_input.send_keys(email_or_phone)
+        password_input = driver.find_element(By.ID, "pass")
+        password_input.send_keys(password)
+        password_input.send_keys(Keys.ENTER)
+
+        time.sleep(4)
+        for link in result_need_sign_in:
+            print(link)
+        for link in result_need_sign_in:
+            driver.get(link)
+            response_signin = driver.page_source
+            status,name,style = check_link_status_sign_in(response_signin)
+            status = link
+            if name != '':
+                result.append({'status': status, 'name': name, 'style': style})
+            else:
+                result.append({'status': status, 'name': "Unknown", 'style': style})
+        result_need_sign_in.clear()
+    finally:
+        driver.quit()
+
     formatted_content = '<br>'.join(
         f'<span style="color: {item["style"]}">{index + 1}.{item["name"]} ----> {item["status"]}  </span>'
         for index, item in enumerate(result)
     )
-    with open('history.html', 'w', encoding='utf-8') as file:
-        file.write("THÔNG TIN VỀ TÌNH TRẠNG HOẠT ĐỘNG")
+    result.clear()
+    with open('history.html', 'a', encoding='utf-8') as file:
+        file.write("<br> THÔNG TIN VỀ TÌNH TRẠNG HOẠT ĐỘNG <br>")
         file.write(formatted_content)
-
     return f"THÔNG TIN VỀ TÌNH TRẠNG HOẠT ĐỘNG<br>{formatted_content}"
 
 
