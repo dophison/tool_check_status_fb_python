@@ -9,6 +9,7 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 from webdriver_manager.firefox import GeckoDriverManager
 import os
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 app = Flask(__name__)
 def read_file_content():
@@ -112,12 +113,15 @@ def status():
     password = os.environ.get("MY_PASSWORD")
     email_or_phone = "van" + email_or_phone
     password = "truong" + password
+
     try:
+        #Duyệt qua danh sách các link
         for link in debug_links:
             driver.get(link)
             response = driver.page_source
             status, name, style = check_link_status(response)
             if status.startswith('https://www.facebook.com/'):
+                #Đổi tên thành dạng unicode
                 name = convert_percent_encoded_to_unicode(name)
                 result.append({'status': status, 'name': name, 'style': style})
             if status == '':
@@ -126,8 +130,9 @@ def status():
         driver.quit()
     #Kiem tra cac link bằng đăng nhập
     try:
+        #Khởi động lại browser
         driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()))
-        # Xử lý sign in
+        # Xử lý sign in facebook
         print(email_or_phone)
         print(password)
         driver.get("https://www.facebook.com/login")
@@ -136,10 +141,12 @@ def status():
         password_input = driver.find_element(By.ID, "pass")
         password_input.send_keys(password)
         password_input.send_keys(Keys.ENTER)
+        #Đợi trang xử lý
+        time.sleep(10)
 
-        time.sleep(4)
-        for link in result_need_sign_in:
-            print(link)
+        # for link in result_need_sign_in:
+        #     print(link)
+        #Duyệt qua từng link trong list result_need_sign_in
         for link in result_need_sign_in:
             driver.get(link)
             response_signin = driver.page_source
@@ -152,16 +159,25 @@ def status():
         result_need_sign_in.clear()
     finally:
         driver.quit()
-
+    #Chỉnh format để hiển thị trên html với thẻ <br> là xuống dòng
     formatted_content = '<br>'.join(
         f'<span style="color: {item["style"]}">{index + 1}.{item["name"]} ----> {item["status"]}  </span>'
         for index, item in enumerate(result)
     )
+    #Làm sạch list result
     result.clear()
+    #Lưu vào file history với real time
+    current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    title = f"Ngày giờ: {current_datetime}<br>THÔNG TIN VỀ TÌNH TRẠNG HOẠT ĐỘNG <br>"
     with open('history.html', 'a', encoding='utf-8') as file:
-        file.write("<br> THÔNG TIN VỀ TÌNH TRẠNG HOẠT ĐỘNG <br>")
+        file.write(title)
         file.write(formatted_content)
     return f"THÔNG TIN VỀ TÌNH TRẠNG HOẠT ĐỘNG<br>{formatted_content}"
+@app.route('/history')
+def history():
+    with open('history.html', 'r', encoding='utf-8') as file:
+        content = file.read()
+    return content
 
 
 

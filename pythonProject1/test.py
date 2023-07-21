@@ -22,20 +22,20 @@ print(password)
 driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()))
 try:
     # Mở trang đăng nhập của Facebook
-    driver.get("https://www.facebook.com/login")
-
-    email_phone_input = driver.find_element(By.ID,"email")
-    email_phone_input.send_keys(email_or_phone)
-    password_input = driver.find_element(By.ID,"pass")
-    password_input.send_keys(password)
-
-    #Thực hiện đăng nhập bằng cách nhấn Enter
-
-    password_input.send_keys(Keys.ENTER)
-
-    # Đợi một lúc để trang đăng nhập xử lý
-    time.sleep(5)
-    url = "https://www.facebook.com/quanganhdeptraivclluon"
+    # driver.get("https://www.facebook.com/login")
+    #
+    # email_phone_input = driver.find_element(By.ID,"email")
+    # email_phone_input.send_keys(email_or_phone)
+    # password_input = driver.find_element(By.ID,"pass")
+    # password_input.send_keys(password)
+    #
+    # #Thực hiện đăng nhập bằng cách nhấn Enter
+    #
+    # password_input.send_keys(Keys.ENTER)
+    #
+    # # Đợi một lúc để trang đăng nhập xử lý
+    # time.sleep(5)
+    url = "https://www.facebook.com/groups/1312256949208825"
     driver.get(url)
     response = driver.page_source
     if 'Bạn hiện không xem được nội dung này' in response:
