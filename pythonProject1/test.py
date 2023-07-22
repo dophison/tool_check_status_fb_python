@@ -35,13 +35,16 @@ try:
     #
     # # Đợi một lúc để trang đăng nhập xử lý
     # time.sleep(5)
-    url = "https://www.facebook.com/groups/1312256949208825"
+    url = "https://www.facebook.com/profile.php?id=100055010022060&__tn__=-VN"
     driver.get(url)
     response = driver.page_source
-    if 'Bạn hiện không xem được nội dung này' in response:
-        style = 'red'
-        print(style)
-    elif 'class="x6s0dn4 x9f619 x78zum5 x2lah0s x1hshjfz x1n2onr6 xng8ra x1pi30zi x1swvt13"' in response:
+    with open('response_test', 'a', encoding='utf-8') as file:
+        content = file.write(response)
+
+    # if 'style="height: 168px; width: 168px;' in response:
+    #     style = 'red'
+    #     print(style)
+    # elif '' in response:
         # #Bỏ qua chuỗi đầu tiên
         # start_tag = '<h1 class="x1heor9g x1qlqyl8 x1pd3egz x1a2a7pz">'
         # start_index = response.find(start_tag)
@@ -54,32 +57,32 @@ try:
         #     print(name)
         # else:
         #     print('')
-        start_tag = '<h1'
-        end_tag = '</h1>'
-        start_index = response.find(start_tag)
-        if start_index != -1:
-            end_index = response.find(end_tag, start_index + len(start_tag))
-            first_string = response[start_index:end_index + len(end_tag)]
-
-            # Tìm chuỗi thứ hai từ vị trí kết thúc của chuỗi đầu tiên
-            second_start_index = response.find(start_tag, end_index + len(end_tag))
-            second_end_index = response.find(end_tag, second_start_index + len(start_tag))
-            second_string = response[second_start_index:second_end_index + len(end_tag)]
-
-            print(first_string)
-            print(second_string)
-            if second_string.strip() == 'Thông báo':
-                soup = BeautifulSoup(first_string, 'html.parser')
-                name = soup.text
-            else:
-                soup_1 = BeautifulSoup(second_string, 'html.parser')
-                name = soup_1.text
-            style = 'green'
-            print(style)
-            print(name)
-    else:
-        style = 'yellow'
-        print(style)
+        # start_tag = '<h1'
+        # end_tag = '</h1>'
+        # start_index = response.find(start_tag)
+        # if start_index != -1:
+        #     end_index = response.find(end_tag, start_index + len(start_tag))
+        #     first_string = response[start_index:end_index + len(end_tag)]
+        #
+        #     # Tìm chuỗi thứ hai từ vị trí kết thúc của chuỗi đầu tiên
+        #     second_start_index = response.find(start_tag, end_index + len(end_tag))
+        #     second_end_index = response.find(end_tag, second_start_index + len(start_tag))
+        #     second_string = response[second_start_index:second_end_index + len(end_tag)]
+        #
+        #     print(first_string)
+        #     print(second_string)
+        #     if second_string.strip() == 'Thông báo':
+        #         soup = BeautifulSoup(first_string, 'html.parser')
+        #         name = soup.text
+        #     else:
+        #         soup_1 = BeautifulSoup(second_string, 'html.parser')
+        #         name = soup_1.text
+        #     style = 'green'
+        #     print(style)
+        #     print(name)
+    # else:
+    #     style = 'yellow'
+    #     print(style)
 
 
 

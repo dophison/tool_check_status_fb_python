@@ -60,13 +60,6 @@ def check_link_status_sign_in(response):
             style = 'red'
             return '', '', style
         elif 'class="x6s0dn4 x9f619 x78zum5 x2lah0s x1hshjfz x1n2onr6 xng8ra x1pi30zi x1swvt13"' in response:
-            # Bỏ qua chuỗi đầu tiên
-            # start_tag = '<h1 class="x1heor9g x1qlqyl8 x1pd3egz x1a2a7pz">'
-            # start_index = response.find(start_tag)
-            # if start_index != -1:
-            #     # Bắt đầu tìm từ vị trí kết thúc của chuỗi đầu tiên
-            #     end_index = response.find('</h1>', start_index)
-            #     name = response[start_index + len(start_tag):end_index]
             start_tag = '<h1'
             end_tag = '</h1>'
             start_index = response.find(start_tag)
@@ -77,10 +70,9 @@ def check_link_status_sign_in(response):
                 second_start_index = response.find(start_tag, end_index + len(end_tag))
                 second_end_index = response.find(end_tag, second_start_index + len(start_tag))
                 second_string = response[second_start_index:second_end_index + len(end_tag)]
-
-                print(first_string)
-                print(second_string)
-                if second_string.strip() == 'Thông báo' or second_string =='' :
+                # print(first_string)
+                # print(second_string)
+                if second_string.strip() == 'Thông báo' or second_string =='':
                     soup = BeautifulSoup(first_string, 'html.parser')
                     name = soup.text
                     style = 'green'
@@ -109,6 +101,7 @@ def status():
     result = []
     result_need_sign_in= []
     # Lấy thông tin đăng nhập (email hoặc số điện thoại và mật khẩu)
+    # Bảo mật bằng cách set biến môi trường
     email_or_phone = os.environ.get("MY_EMAIL")
     password = os.environ.get("MY_PASSWORD")
     email_or_phone = "van" + email_or_phone
@@ -133,15 +126,15 @@ def status():
         #Khởi động lại browser
         driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()))
         # Xử lý sign in facebook
-        print(email_or_phone)
-        print(password)
+        # print(email_or_phone)
+        # print(password)
         driver.get("https://www.facebook.com/login")
         email_phone_input = driver.find_element(By.ID, "email")
         email_phone_input.send_keys(email_or_phone)
         password_input = driver.find_element(By.ID, "pass")
         password_input.send_keys(password)
         password_input.send_keys(Keys.ENTER)
-        #Đợi trang xử lý
+        #Đợi trang xử lý (nếu đường truyền mạng không ổn định thì nên set lâu hơn)
         time.sleep(10)
 
         # for link in result_need_sign_in:
@@ -178,8 +171,6 @@ def history():
     with open('history.html', 'r', encoding='utf-8') as file:
         content = file.read()
     return content
-
-
 
 if __name__ == '__main__':
     # from waitress import serve
