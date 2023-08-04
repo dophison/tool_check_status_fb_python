@@ -36,11 +36,21 @@ def check_link_status(response):
             href_content = response[href_start:href_end]
             style = 'green'
             # Kiểm tra trong response có <meta name="description" content=" hay không
-            if '<meta name="description" content="' in response:
-                meta_start = response.find('<meta name="description" content="') + len(
-                    '<meta name="description" content="')
-                meta_end = response.find('đang', meta_start)
-                name = response[meta_start:meta_end]
+            # if '<meta name="description" content="' in response:
+            #     meta_start = response.find('<meta name="description" content="') + len(
+            #         '<meta name="description" content="')
+            #     meta_end = response.find('đang', meta_start)
+            #     name = response[meta_start:meta_end]
+            # else:
+            #     name = ''
+            # return href_content, name, style
+            soup = BeautifulSoup(response, 'html.parser')
+            meta_tag = soup.find('meta', attrs={'name': 'description'})
+            if meta_tag:
+                name = meta_tag.get('content')
+                sentences = name.split('.')
+                if len(sentences) > 0:
+                    name = sentences[0].strip()
             else:
                 name = ''
             return href_content, name, style
