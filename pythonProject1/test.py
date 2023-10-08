@@ -13,18 +13,15 @@ from bs4 import BeautifulSoup
 
 def check_link_status(response):
     try:
-        if '<link rel="alternate" hreflang="x-default" href="https://www.facebook.com/' in response:
-            href_start = response.find('<link rel="alternate" hreflang="x-default" href="') + len(
-                '<link rel="alternate" hreflang="x-default" href="')
+        if '<link rel="canonical" href="https://www.facebook.com/' in response:
+            href_start = response.find('<link rel="canonical" href="') + len(
+                '<link rel="canonical" href="')
             href_end = response.find('"', href_start)
             href_content = response[href_start:href_end]
+            if href_content =='https://www.facebook.com/':
+                style = 'red'
+                return '','', style
             style = 'green'
-            # Kiểm tra trong response có <meta name="description" content=" hay không
-
-                # meta_start = response.find('<meta name="description" content="') + len(
-                #     '<meta name="description" content="')
-                # meta_end = response.find('đang', meta_start)
-                # name = response[meta_start:meta_end]
             soup = BeautifulSoup(response, 'html.parser')
             meta_tag = soup.find('meta', attrs={'name': 'description'})
             if meta_tag:
@@ -47,18 +44,19 @@ def convert_percent_encoded_to_unicode(text):
     return decoded_text
 
 # Lấy thông tin đăng nhập (email hoặc số điện thoại và mật khẩu)
-email_or_phone = os.environ.get("MY_EMAIL")
-password = os.environ.get("MY_PASSWORD")
-email_or_phone = "van" + email_or_phone
-password = "truong" + password
-print(email_or_phone)
-print(password)
+# email_or_phone = os.environ.get("MY_EMAIL")
+# password = os.environ.get("MY_PASSWORD")
+# email_or_phone = "van" + email_or_phone
+# password = "chuyen" + password
+# print(email_or_phone)
+# print(password)
 
-
+result = []
+result_need_sign_in= []
 # Khởi tạo trình duyệt Firefox
 driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()))
 try:
-    # Mở trang đăng nhập của Facebook
+     # Mở trang đăng nhập của Facebook
     # driver.get("https://www.facebook.com/login")
     #
     # email_phone_input = driver.find_element(By.ID,"email")
@@ -72,13 +70,13 @@ try:
     #
     # # Đợi một lúc để trang đăng nhập xử lý
     # time.sleep(5)
-    result_need_sign_in= []
-    result = []
-    url = "https://www.facebook.com/thduc.205.real"
+    # result_need_sign_in= []
+    # result = []
+    url = "https://www.facebook.com//profile.php?id=100039035029496&__tn__=-VN"
     driver.get(url)
     response = driver.page_source
-    with open('response_test', 'a', encoding='utf-8') as file:
-        content = file.write(response)
+    # with open('response_test', 'a', encoding='utf-8') as file:
+    #     content = file.write(response)
     status, name, style = check_link_status(response)
     print(name,status)
     if status.startswith('https://www.facebook.com/'):
@@ -87,7 +85,6 @@ try:
         result.append({'status': status, 'name': name, 'style': style})
     if status == '':
         result_need_sign_in.append(url)
-
 
 
 

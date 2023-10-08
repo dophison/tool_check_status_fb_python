@@ -29,11 +29,18 @@ def convert_percent_encoded_to_unicode(text):
 
 def check_link_status(response):
     try:
-        if '<link rel="alternate" hreflang="x-default" href="https://www.facebook.com/' in response:
-            href_start = response.find('<link rel="alternate" hreflang="x-default" href="') + len(
-                '<link rel="alternate" hreflang="x-default" href="')
+        # if '<link rel="alternate" hreflang="x-default" href="https://www.facebook.com/' in response:
+        #     href_start = response.find('<link rel="alternate" hreflang="x-default" href="') + len(
+        #         '<link rel="alternate" hreflang="x-default" href="')
+        if '<link rel="canonical" href="https://www.facebook.com/' in response:
+            href_start = response.find('<link rel="canonical" href="') + len(
+                '<link rel="canonical" href="')
             href_end = response.find('"', href_start)
             href_content = response[href_start:href_end]
+            if href_content =='https://www.facebook.com/':
+                style = 'red'
+                return '','', style
+            # print(href_content)
             style = 'green'
             # Kiểm tra trong response có <meta name="description" content=" hay không
             # if '<meta name="description" content="' in response:
@@ -115,7 +122,7 @@ def status():
     email_or_phone = os.environ.get("MY_EMAIL")
     password = os.environ.get("MY_PASSWORD")
     email_or_phone = "van" + email_or_phone
-    password = "truong" + password
+    password = "chuyen" + password
 
     try:
         #Duyệt qua danh sách các link
